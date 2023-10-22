@@ -70,12 +70,14 @@ namespace ParticleProject
         //forces Vectors, they can be directly added to combine them if needed
         public static Vector2 gravity = new Vector2(0, 9.8f);
         public static Vector2 wind = new Vector2(2f, 0);
+        public static Vector2 lift = new Vector2(0.5f, -1.5f);
 
         //Store the platforms
         private List<Platform> platforms = new List<Platform>();
 
         //Define List of all Emitters here (Thank you polymorphism!)
         private List<Emitter> emitters = new List<Emitter>();
+        private List<Emitter> explosiveEmitters = new List<Emitter>();
 
         public Game1()
         {
@@ -150,7 +152,30 @@ namespace ParticleProject
             platforms.Add(new Platform(brickImg, 10, 0.25f, 25, 108, true));                                                    //Water platform
 
             //TODO: Add permanent emitters here
-            
+
+            //Water Emitter
+            float emitterScaleWater = 0.25f;
+            emitters.Add(new Emitter(emitterImg, emitterScaleWater, new Vector2(38, 96), Emitter.INFINITE, 0, 10, bluePartImg, 0.1f,
+                 0.25f, 3000, 4000, 330, 390, 250, 500, gravity, Particle.SPLAT_BALL, Color.White, true, true));
+
+            emitters.Add(new Emitter(emitterImg, emitterScaleWater, new Vector2(screenWidth / 2, 12), Emitter.INFINITE, 0, 10, bluePartImg, 0.1f,
+                   0.25f, 3000, 4000, 240, 300, 250, 500, gravity, Particle.SPLAT_BALL, Color.White, true, true));
+            emitters.Add(new Emitter(emitterImg, emitterScaleWater, new Vector2(963, 100), Emitter.INFINITE, 0, 10, bluePartImg, 0.1f,
+                   0.25f, 3000, 4000, 150, 210, 250, 500, gravity, Particle.SPLAT_BALL, Color.White, true, true));
+            emitters.Add(new Emitter(emitterImg, emitterScaleWater, new Vector2(825, 480), Emitter.INFINITE, 0, 10, bluePartImg, 0.1f,
+                   0.25f, 3000, 4000, 60, 120, 250, 500, gravity, Particle.SPLAT_BALL, Color.White, true, true));
+
+            //Smoke Emitter
+            float emitterScaleSmoke = 0.25f;
+            emitters.Add(new Emitter(emitterImg, emitterScaleSmoke, new Vector2(225, 388), Emitter.INFINITE, 0, 100, smokeImgs[0], 0.3f,
+                   0.5f, 2500, 3500, 75, 105, 100, 100, lift, Particle.SPLAT_BALL, Color.White, true, true));
+
+            //Mouse Emitter (set as last emitter)
+            float emitterScaleMouse = 0f;
+            emitters.Add(new Emitter(null, emitterScaleMouse, new Vector2(0, 0), Emitter.INFINITE, 50, 100, blankPartImg, 0.1f,
+                 0.2f, 1000, 2000, 0, 360, 0, 100, gravity, Particle.BOWLING_BALL, Color.Green, false, true));
+        
+
         }
 
         /// <summary>
@@ -205,71 +230,90 @@ namespace ParticleProject
                     if (noCollision)
                     {
                         //TODO: Add an explosion of particles here to List of explosive emitters
+                        //ASK ABOUT CLAMP NUMBER OF PARTICLES, needs to be enforced at a number between 1 and max particles\
                         
+                        int numParticles = MathHelper.Clamp(1000, 1, Emitter.MAX_PARTICLES);
+                        explosiveEmitters.Add(new Explosive(starImg, new Vector2(mouse.X, mouse.Y), numParticles));
                     }
                 }
 
                 //Toggle water spouts
-                if (kb.IsKeyDown(Keys.D1) && !prevKb.IsKeyDown(Keys.D1))    //Rightward spout with platform
-                {
-                    //TODO: Turn on/off left wall spout
-                    
+                //Left spout
+                if (kb.IsKeyDown(Keys.D1) && !prevKb.IsKeyDown(Keys.D1))
+                {                   
+                    emitters[0].ChangeState();
                 }
-                if (kb.IsKeyDown(Keys.D2) && !prevKb.IsKeyDown(Keys.D2))    //Downward spout
+                if (kb.IsKeyDown(Keys.D2) && !prevKb.IsKeyDown(Keys.D2))    //Top spout
                 {
-                    //TODO: Turn on/off top wall spout
-                    
+                    emitters[1].ChangeState();
                 }
-                if (kb.IsKeyDown(Keys.D3) && !prevKb.IsKeyDown(Keys.D3))    //Leftward spout
+                if (kb.IsKeyDown(Keys.D3) && !prevKb.IsKeyDown(Keys.D3))    //Right
                 {
-                    //TODO: Turn on/off right wall spout
-                    
+                    emitters[2].ChangeState();
                 }
-                if (kb.IsKeyDown(Keys.D4) && !prevKb.IsKeyDown(Keys.D4))    //Upward Spout
+                if (kb.IsKeyDown(Keys.D4) && !prevKb.IsKeyDown(Keys.D4))    //Bottom 
                 {
-                    //TODO: Turn on/off bottom wall spout
-                    
+                    emitters[3].ChangeState();
                 }
 
                 //Toggle Smoker
                 if (kb.IsKeyDown(Keys.D5) && !prevKb.IsKeyDown(Keys.D5))    //Smoke emitter
                 {
-                    //TODO: Turn on/off smoker
-                    
+                    emitters[4].ChangeState();
                 }
 
                 //Toggle the Circular, Rectangular and Line Emitters
                 if (kb.IsKeyDown(Keys.D6) && !prevKb.IsKeyDown(Keys.D6))    //Circular Launcher
                 {
                     //TODO: Turn on/off bottom wall spout
-                    
+
                 }
                 if (kb.IsKeyDown(Keys.D7) && !prevKb.IsKeyDown(Keys.D7))    //Rectangular Launcher
                 {
                     //TODO: Turn on/off bottom wall spout
-                    
+
                 }
                 if (kb.IsKeyDown(Keys.D8) && !prevKb.IsKeyDown(Keys.D8))    //Line Launcher
                 {
                     //TODO: Turn on/off bottom wall spout
-                    
+
                 }
 
                 if (kb.IsKeyDown(Keys.Space) && !prevKb.IsKeyDown(Keys.Space))    //Show Launch indicators
                 {
                     //TODO: Turn on/off bottom wall spout
-                    
+
                 }
 
-                
-                //TODO: Update mouse Emitter's location
-                
+
+                //Update mouse Emitter's location
+                emitters[emitters.Count - 1].SetPos(mouse.X, mouse.Y);
 
                 //TODO: Update all emitters, removing them when completed
+                for (int i = 0; i < emitters.Count; i++)
+                {
+                    if (emitters[i].GetState() == Emitter.ACTIVE)
+                    {
+                        emitters[i].Update(gameTime, platforms);
+                    }
 
+                }
+
+                for (int i = 0; i < explosiveEmitters.Count; i++)
+                {
+                    if (explosiveEmitters[i].GetState() == Emitter.ACTIVE)
+                    {
+                        explosiveEmitters[i].Update(gameTime, platforms);
+                    }
+
+                    if (explosiveEmitters[i].GetState() == Emitter.DEAD)
+                    {
+                        explosiveEmitters.RemoveAt(i);
+                    }
+                }
+
+                base.Update(gameTime);
             }
-
-            base.Update(gameTime);
         }
 
         /// <summary>
@@ -281,6 +325,7 @@ namespace ParticleProject
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
             spriteBatch.Begin();
+
             //Draw the background
             spriteBatch.Draw(bgImg, bgRec, Color.White);
 
@@ -290,12 +335,17 @@ namespace ParticleProject
                 platforms[i].Draw(spriteBatch);
             }
 
-            //if (paused)
-            //{
-            //    spriteBatch.DrawString(hudFont, "PAUSED", new Vector2(400, 300), Color.Blue);
-            //}
+            //Display emitters
+            for (int i = 0; i < emitters.Count; i++)
+            {
+                emitters[i].Draw(spriteBatch);
+            }
 
-            //TODO: Draw all emitters
+            //Display explosive emitter
+            for (int i = 0; i < explosiveEmitters.Count; i++)
+            {
+                explosiveEmitters[i].Draw(spriteBatch);
+            }
 
             spriteBatch.End();
             

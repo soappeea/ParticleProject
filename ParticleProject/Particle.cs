@@ -22,6 +22,12 @@ namespace ParticleProject
         public const float RUBBER_BALL = 0.8f;
         public const float BOWLING_BALL = 0.3f;
         public const float SPLAT_BALL = 0.1f;         //90% of velocity taken away when hit the wall
+        private const int REBOUND = -1;
+
+        private const int TOP = 1;
+        private const int BOTTOM = 2;
+        private const int LEFT = 3;
+        private const int RIGHT = 4;
 
         private Texture2D img;
         private Rectangle rec;
@@ -40,6 +46,7 @@ namespace ParticleProject
         private bool fade;
 
         private float speedTolerance = 0.005f;
+
 
         public Particle(Texture2D img, float scale, int lifeSpan, int angle, float speed, Vector2 forces, bool fade, float reboundScaler, Color colour, bool envCollisions)
         {
@@ -79,6 +86,18 @@ namespace ParticleProject
                         //If a collision is found, determine the side of the particle that made contact, by checking
                         //collision with the midpoint of each wall of the particle's bounding box.  Then modify
                         //velocity as needed and adjust the particle's position to eliminate overlap
+
+                        //Top
+                        CollisionDetection(rec.X + rec.Width / 2, rec.Y, platforms, TOP);
+
+                        //Bottom
+                        CollisionDetection(rec.X + rec.Width / 2, rec.Y + rec.Height, platforms, BOTTOM);
+
+                        //Left
+                        CollisionDetection(rec.X, rec.Y + rec.Height / 2, platforms, LEFT);
+
+                        //Right
+                        CollisionDetection(rec.X + rec.Width, rec.Y + rec.Height / 2, platforms, RIGHT);
                     }
 
                     //Stop the particle when it's velocity goes below the tolerance
@@ -91,6 +110,40 @@ namespace ParticleProject
                 else if (lifeTimer.IsFinished())
                 {
                     state = DEAD;
+                }
+            }
+        }
+
+        private void CollisionDetection(float x, float y, List<Platform> platforms, int side)
+        {
+            for (int i = 0; i < platforms.Count; i++)
+            {
+                if (platforms[i].GetBoundingBox().Contains(x, y))
+                {
+                    switch (side)
+                    {
+                        case TOP:
+                            pos.Y = platforms[i].GetBoundingBox().Y + platforms[i].GetBoundingBox().Height + rec.Height / 2;
+                            SetPosition(pos);
+                            vel.Y *= REBOUND * reboundScaler;
+                            break;
+                        case BOTTOM:
+                            pos.Y = platforms[i].GetBoundingBox().Y - rec.Height / 2;
+                            SetPosition(pos);
+                            vel.Y *= REBOUND * reboundScaler;
+                            break;
+                        case LEFT:
+                            pos.X = platforms[i].GetBoundingBox().X + platforms[i].GetBoundingBox().Width + rec.Width / 2;
+                            SetPosition(pos);
+                            vel.X *= REBOUND * reboundScaler;
+                            break;
+                        case RIGHT:
+                            pos.X = platforms[i].GetBoundingBox().X - platforms[i].GetBoundingBox().Width / 2;
+                            SetPosition(pos);
+                            vel.X *= REBOUND * reboundScaler;
+                            break;
+                    }
+
                 }
             }
         }
