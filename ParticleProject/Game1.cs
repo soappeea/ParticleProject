@@ -4,6 +4,8 @@
 //Creation Date: 
 //Modified Date: 
 //Description: 
+//TODO: FIGURE OUT WHY RECT POLYMORPHISM IS NAWT WORKING (something to do with timer and it constantly going back to emitter's update instead of its overwritten one
+//Prevent RECT (null image) from being ACTIVE asap in Emitter
 using System;
 using System.IO;
 using System.Linq;
@@ -78,6 +80,7 @@ namespace ParticleProject
         //Define List of all Emitters here (Thank you polymorphism!)
         private List<Emitter> emitters = new List<Emitter>();
         private List<Emitter> explosiveEmitters = new List<Emitter>();
+        private Emitter rectEmitter;
 
         public Game1()
         {
@@ -170,11 +173,26 @@ namespace ParticleProject
             emitters.Add(new Emitter(emitterImg, emitterScaleSmoke, new Vector2(225, 388), Emitter.INFINITE, 0, 100, smokeImgs[0], 0.3f,
                    0.5f, 2500, 3500, 75, 105, 100, 100, lift, Particle.SPLAT_BALL, Color.White, true, true));
 
+            //Circle Emitter
+            emitters.Add(new Circ(null, 0f, /*temporary loc*/new Vector2(500, 400) , Emitter.INFINITE, /*temp*/50, /*temp*/100, blankPartImg,
+                /*temp*/0.2f, /*temp*/0.3f,  /*temp*/2000,  /*temp*/3000,  /*temp*/0,  /*temp*/360,  /*temp*/200,  /*temp*/400, gravity,
+                /*temp*/Particle.SPLAT_BALL, Color.Yellow, true, true, /*temp*/30, GraphicsDevice));
+
+            //Rectangle Emitter
+            emitters.Add(new Rect(null, 0f, /*temporary loc*/new Vector2(platforms[0].GetBoundingBox().Width + 38, 400 + 100) /*since rectnalge is centred at emitter position*/, Emitter.INFINITE, /*temp*/1000, /*temp*/2000, blankPartImg,
+                /*temp*/0.2f, /*temp*/0.3f,  /*temp*/2000,  /*temp*/3000,  /*temp*/0,  /*temp*/360,  /*temp*/200,  /*temp*/400, gravity,
+                /*temp*/Particle.SPLAT_BALL, Color.Yellow, true, true, /*temp*/75,/*temp*/ 200, GraphicsDevice));
+
             //Mouse Emitter (set as last emitter)
             float emitterScaleMouse = 0f;
             emitters.Add(new Emitter(null, emitterScaleMouse, new Vector2(0, 0), Emitter.INFINITE, 50, 100, blankPartImg, 0.1f,
                  0.2f, 1000, 2000, 0, 360, 0, 100, gravity, Particle.BOWLING_BALL, Color.Green, false, true));
-        
+
+            rectEmitter = new Rect(null, 0f, /*temporary loc*/new Vector2(platforms[0].GetBoundingBox().Width + 38, 400 + 100) /*since rectnalge is centred at emitter position*/, Emitter.INFINITE, /*temp*/1000, /*temp*/2000, blankPartImg,
+                /*temp*/0.2f, /*temp*/0.3f,  /*temp*/2000,  /*temp*/3000,  /*temp*/0,  /*temp*/360,  /*temp*/200,  /*temp*/400, gravity,
+                /*temp*/Particle.SPLAT_BALL, Color.Yellow, true, true, /*temp*/75,/*temp*/ 200, GraphicsDevice);
+
+
 
         }
 
@@ -266,12 +284,12 @@ namespace ParticleProject
                 if (kb.IsKeyDown(Keys.D6) && !prevKb.IsKeyDown(Keys.D6))    //Circular Launcher
                 {
                     //TODO: Turn on/off bottom wall spout
-
+                    emitters[5].ChangeState();
                 }
                 if (kb.IsKeyDown(Keys.D7) && !prevKb.IsKeyDown(Keys.D7))    //Rectangular Launcher
                 {
                     //TODO: Turn on/off bottom wall spout
-
+                    emitters[6].ChangeState();
                 }
                 if (kb.IsKeyDown(Keys.D8) && !prevKb.IsKeyDown(Keys.D8))    //Line Launcher
                 {
@@ -282,7 +300,12 @@ namespace ParticleProject
                 if (kb.IsKeyDown(Keys.Space) && !prevKb.IsKeyDown(Keys.Space))    //Show Launch indicators
                 {
                     //TODO: Turn on/off bottom wall spout
-
+                    //for (int i = 5; i < 8; i++)
+                    //{
+                    //    emitters[i].ToggleLauncherVisibility();
+                    //}
+                    emitters[5].ToggleLauncherVisibility();
+                    emitters[6].ToggleLauncherVisibility();
                 }
 
 
@@ -290,14 +313,16 @@ namespace ParticleProject
                 emitters[emitters.Count - 1].SetPos(mouse.X, mouse.Y);
 
                 //TODO: Update all emitters, removing them when completed
-                for (int i = 0; i < emitters.Count; i++)
-                {
-                    if (emitters[i].GetState() == Emitter.ACTIVE)
-                    {
-                        emitters[i].Update(gameTime, platforms);
-                    }
+                //for (int i = 0; i < emitters.Count; i++)
+                //{
+                //    if (emitters[i].GetState() == Emitter.ACTIVE)
+                //    {
+                //        emitters[i].Update(gameTime, platforms);
+                //    }
 
-                }
+                //}
+
+                rectEmitter.Update(gameTime, platforms);
 
                 for (int i = 0; i < explosiveEmitters.Count; i++)
                 {

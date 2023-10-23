@@ -65,11 +65,6 @@ namespace ParticleProject
         protected float emitterY;
         protected int imgWidth;
         protected int imgHeight;
-        //private SpriteFont hudFont;
-
-        //protected double timeSinceLastLaunch;
-        //protected double launchInterval;
-        //protected int partCount = -1;
 
         protected List<Particle> particles = new List<Particle>();
 
@@ -94,7 +89,8 @@ namespace ParticleProject
                 //Mouse emitter specific
                 this.emitterX = pos.X;
                 this.emitterY = pos.Y;
-                this.state = ACTIVE;
+                //Rectangle has null img, so figure out how to make this inactive initially
+                 this.state = ACTIVE;
                 this.running = true;
 
             }
@@ -162,7 +158,12 @@ namespace ParticleProject
             return state;
         }
 
-        private Rectangle GetRectangle()
+        public void ToggleLauncherVisibility()
+        {
+            showLauncher = !showLauncher;
+        }
+
+        protected Rectangle GetRectangle()
         {
             return new Rectangle((int)(this.emitterX - this.imgWidth / 2),
                                            (int)(this.emitterY - this.imgHeight / 2), imgWidth, imgHeight);
@@ -251,13 +252,14 @@ namespace ParticleProject
             if (drawn)
                 spriteBatch.Draw(img, GetRectangle(), colour);
 
-            if (state != INACTIVE)
-            {
+            //Ask if particles are supposed to be frozen in air
+            //if (state != INACTIVE)
+            //{
                 for (int i = 0; i < particles.Count; i++)
                 {
                     particles[i].Draw(spriteBatch);
                 }
-            }
+            //}
         }
     }
 }
