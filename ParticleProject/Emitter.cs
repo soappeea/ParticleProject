@@ -16,7 +16,7 @@ namespace ParticleProject
     class Emitter
     {
         //for rng max restraint
-        private const int INCREMENT = 1;
+        protected int INCREMENT = 1;
 
         //Used to define and Emitter to never stop launching
         public const int INFINITE = -1;
@@ -35,6 +35,7 @@ namespace ParticleProject
         protected float scale = 1f;
         protected Vector2 pos;
         protected int numParticles;
+        protected int numLaunched;
         protected int launchTimeMin;
         protected int launchTimeMax;
         protected Texture2D partImg;
@@ -66,6 +67,8 @@ namespace ParticleProject
         protected int imgWidth;
         protected int imgHeight;
 
+        protected const float transparency = 0.7f;
+
         protected List<Particle> particles = new List<Particle>();
 
         public Emitter(Texture2D img, float scale, Vector2 pos, int numParticles, int launchTimeMin, int launchTimeMax, Texture2D partImg,
@@ -82,15 +85,15 @@ namespace ParticleProject
                 this.emitterY = pos.Y;
                 this.state = INACTIVE;
                 this.running = false;
-                
+
             }
-            else
+            else if (img == null)
             {
                 //Mouse emitter specific
                 this.emitterX = pos.X;
                 this.emitterY = pos.Y;
                 //Rectangle has null img, so figure out how to make this inactive initially
-                 this.state = ACTIVE;
+                this.state = ACTIVE;
                 this.running = true;
 
             }
@@ -126,6 +129,8 @@ namespace ParticleProject
             }
 
             this.drawn = (img != null && scale > 0);
+
+
         }
 
         protected int GetRandInt(int min, int max)
@@ -140,24 +145,28 @@ namespace ParticleProject
             return randFloat;
         }
 
-        public virtual void ChangeState()
+        public virtual void ToggleOnOff()
         {
             running = !running;
-
-            if (running)
-            {
-                state = ACTIVE;
-            }
-            else
-            {
-                state = INACTIVE;
-            }
+        }
+        public virtual void Activate()
+        {
+            state = ACTIVE;
         }
         public int GetState()
         {
-            return state;
+             return state;
         }
 
+        public bool GetRunState()
+        {
+            return running;
+        }
+
+        public bool GetShowLaunch()
+        {
+            return showLauncher;
+        }
         public void ToggleLauncherVisibility()
         {
             showLauncher = !showLauncher;
@@ -186,10 +195,14 @@ namespace ParticleProject
                 particles.Add(CreateParticles());
 
                 if (particles.Count > 0)
+                {
+                    numLaunched++;
                     particles[particles.Count - 1].Launch(new Vector2(emitterX, emitterY));
+                }
 
                 launchTimer.ResetTimer(true, GetRandInt(launchTimeMin, launchTimeMax));
             }
+
         }
         protected virtual void LaunchAll()
         {
@@ -218,22 +231,32 @@ namespace ParticleProject
 
         public virtual void Update(GameTime gameTime, List<Platform> platforms)
         {
-            launchTimer.Update(gameTime.ElapsedGameTime.TotalMilliseconds);
+            if (state == ACTIVE)
+            {
+                launchTimer.Update(gameTime.ElapsedGameTime.TotalMilliseconds);
+
+                if (numParticles == INFINITE && !explode)
+                {
+                    Launch();
+                }
+
+                if (explode)
+                {
+                    LaunchAll();
+                }
+
+                if (numLaunched > numParticles && numParticles != INFINITE)
+                {
+                    state = DEAD;
+                }
+            }
 
             if (img != null && scale > 0)
             {
                 drawn = true;
             }
 
-            if (numParticles == INFINITE && !explode)
-            {
-                Launch();
-            }
 
-            if (explode)
-            {
-                LaunchAll();
-            }
 
             for (int i = 0; i < particles.Count; i++)
             {
@@ -246,20 +269,33 @@ namespace ParticleProject
                     particles.RemoveAt(i);
                 }
             }
+
+            if (particles.Count == 0)
+            {
+                state = DONE;
+            }
         }
         public virtual void Draw(SpriteBatch spriteBatch)
         {
-            if (drawn)
-                spriteBatch.Draw(img, GetRectangle(), colour);
 
             //Ask if particles are supposed to be frozen in air
             //if (state != INACTIVE)
             //{
-                for (int i = 0; i < particles.Count; i++)
-                {
-                    particles[i].Draw(spriteBatch);
-                }
+            //if (running)
+            //{
+
             //}
+            //}
+
+            for (int i = 0; i < particles.Count; i++)
+            {
+                particles[i].Draw(spriteBatch);
+            }
+
+            if (drawn)
+                spriteBatch.Draw(img, GetRectangle(), colour);
+
+
         }
     }
 }

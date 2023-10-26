@@ -19,7 +19,7 @@ namespace ParticleProject
         private int height;
         private GraphicsDevice gd;
         private GameRectangle rectangle;
-        private Vector2 pos;
+        private Vector2 launchPos;
         private Vector2 centeredPos;
         private Vector2 launchDimensions;
 
@@ -39,15 +39,14 @@ namespace ParticleProject
             this.centeredPos.Y = (int)pos.Y - height / 2;
             rectangle = new GameRectangle(gd, (int)centeredPos.X, (int)centeredPos.Y, width, height);
             SetLaunchArea((int)centeredPos.X, (int)centeredPos.Y);
+            this.state = INACTIVE;
+            this.running = false;
         }
 
         public void SetLaunchArea(int x, int y)
         {
             launchDimensions.X = x + rectangle.Width;
             launchDimensions.Y = y + rectangle.Height;
-            //int xPos = GetRandInt(x, launchX);
-            //int yPos = GetRandInt(y, launchY);
-            //GetLaunchPos(xPos, yPos);
         }
         private Vector2 GetLaunchPos(int x, int y)
         {
@@ -57,21 +56,24 @@ namespace ParticleProject
         }
 
         //Questionable
-        //public override void SetPos(float x, float y)
-        //{
-        //    emitterX = x;
-        //    emitterY = y;
-        //    SetLaunchArea((int)emitterX, (int)emitterY);
-        //}
+        public override void SetPos(float x, float y)
+        {
+            emitterX = x;
+            emitterY = y;
+            //SetLaunchArea((int)emitterX, (int)emitterY);
+        }
         protected override void Launch()
         {
             if (!launchTimer.IsActive())
             {
                 particles.Add(CreateParticles());
-
+                launchPos = GetLaunchPos((int)centeredPos.X, (int)centeredPos.Y);
                 if (particles.Count > 0)
-                    particles[particles.Count - 1].Launch(GetLaunchPos((int)pos.X - width / 2, (int)pos.Y - height / 2));
-
+                {
+                    SetPos(launchPos.X, launchPos.Y);
+                    numLaunched++;
+                    particles[particles.Count - 1].Launch(launchPos);
+                }
                 launchTimer.ResetTimer(true, GetRandInt(launchTimeMin, launchTimeMax));
             }
         }
@@ -79,7 +81,9 @@ namespace ParticleProject
         {
             if (state == ACTIVE)
             {
-                if (numParticles == INFINITE && !explode)
+                launchTimer.Update(gameTime.ElapsedGameTime.TotalMilliseconds);
+
+                if (!explode)
                 {
                     Launch();
                 }
@@ -89,16 +93,21 @@ namespace ParticleProject
                     LaunchAll();
                 }
 
-                for (int i = 0; i < particles.Count; i++)
+                if (numLaunched > numParticles)
                 {
-                    if (particles[i].GetState() == Particle.ACTIVE)
-                    {
-                        particles[i].Update(gameTime, platforms);
-                    }
-                    else if (particles[i].GetState() == Particle.DEAD)
-                    {
-                        particles.RemoveAt(i);
-                    }
+                    state = DEAD;
+                }
+            }
+
+            for (int i = 0; i < particles.Count; i++)
+            {
+                if (particles[i].GetState() == Particle.ACTIVE)
+                {
+                    particles[i].Update(gameTime, platforms);
+                }
+                else if (particles[i].GetState() == Particle.DEAD)
+                {
+                    particles.RemoveAt(i);
                 }
             }
         }
@@ -107,7 +116,14 @@ namespace ParticleProject
             if (showLauncher)
             {
                 //KEYNOTE: THE RECTANGLE IS CENTRED AT EMITTER POSITION, AND THE TOP LEFT IS LOCATED AT THE EMITTER POSITION MINUS HALF THE WIDTH AND HEIGHT OF THE RECTNAGLE 
-                rectangle.Draw(spriteBatch, Color.Blue, true);
+                rectangle.Draw(spriteBatch, Color.Blue * transparency, true);
+
+                for (int i = 0; i < particles.Count; i++)
+                {
+                    particles[i].Draw(spriteBatch);
+                }
+
+                spriteBatch.Draw(img, GetRectangle()/*launchPos*/, Color.White);
             }
 
         }

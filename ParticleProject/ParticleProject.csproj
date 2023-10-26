@@ -55,6 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Circ.cs" />
+    <Compile Include="Cloud.cs" />
     <Compile Include="Emitter.cs" />
     <Compile Include="Explosive.cs" />
     <Compile Include="Game1.cs" />
