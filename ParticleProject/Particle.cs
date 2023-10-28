@@ -47,7 +47,6 @@ namespace ParticleProject
 
         private float speedTolerance = 0.005f;
 
-
         public Particle(Texture2D img, float scale, int lifeSpan, int angle, float speed, Vector2 forces, bool fade, float reboundScaler, Color colour, bool envCollisions)
         {
             this.img = img;
@@ -163,6 +162,13 @@ namespace ParticleProject
             rec.Y = (int)pos.Y - rec.Height / 2;
         }
 
+        public Vector2 GetPosition()
+        {
+            return new Vector2(this.pos.X - rec.Width / 2, this.pos.Y - rec.Height / 2);
+            //this.pos = pos;
+            //rec.X = (int)this.pos.X - rec.Width / 2;
+            //rec.Y = (int)this.pos.Y - rec.Height / 2;
+        }
         private void SetPosition(Vector2 pos)
         {
             this.pos = pos;

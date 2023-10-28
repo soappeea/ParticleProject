@@ -155,7 +155,7 @@ namespace ParticleProject
         }
         public int GetState()
         {
-             return state;
+            return state;
         }
 
         public bool GetRunState()
@@ -172,16 +172,16 @@ namespace ParticleProject
             showLauncher = !showLauncher;
         }
 
-        protected Rectangle GetRectangle()
+        protected virtual Rectangle GetRectangle()
         {
             return new Rectangle((int)(this.emitterX - this.imgWidth / 2),
                                            (int)(this.emitterY - this.imgHeight / 2), imgWidth, imgHeight);
         }
 
-        protected Vector2 GetPosition()
-        {
-            return new Vector2(emitterX, emitterY);
-        }
+        //protected Vector2 GetPosition()
+        //{
+        //    return new Vector2(emitterX, emitterY);
+        //}
         public virtual void SetPos(float x, float y)
         {
             emitterX = x;

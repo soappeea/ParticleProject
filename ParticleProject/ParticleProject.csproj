@@ -59,6 +59,7 @@
     <Compile Include="Emitter.cs" />
     <Compile Include="Explosive.cs" />
     <Compile Include="Game1.cs" />
+    <Compile Include="Line.cs" />
     <Compile Include="Particle.cs" />
     <Compile Include="Platform.cs" />
     <Compile Include="Program.cs" />

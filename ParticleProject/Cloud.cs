@@ -19,25 +19,53 @@ namespace ParticleProject
 
         //CHECK FOR COLLISION OF CLOUD TO RIGHT OR LEFT, THEN REVERSE DIRECTION
         private Circ cloudCirc;
+        private const int WALL_LEFT = 0;
+        private const int WALL_RIGHT = 1;
+        private const int DIR = -1;
         private int cloudSpeedMin;
         private int cloudSpeedMax;
-
+        private int cloudSpeed;
 
         public Cloud(Texture2D img, float scale, Vector2 pos, int numParticles, int launchTimeMin, int launchTimeMax, Texture2D partImg,
                         float scaleMin, float scaleMax, int lifeMin, int lifeMax, int angleMin, int angleMax, int speedMin, int speedMax,
-                        Vector2 forces, float reboundScaler, Color colour, bool envCollisions, bool fade, int radius, GraphicsDevice gd, int cloudSpeedMin, int cloudSpeedMax)
+                        Vector2 forces, float reboundScaler, Color colour, bool envCollisions, bool fade, int radius, GraphicsDevice gd,
+                        int cloudSpeedMin, int cloudSpeedMax, Texture2D emitterImg, bool showCirc)
                      : base(img, scale, pos, numParticles, launchTimeMin, launchTimeMax, partImg, scaleMin, scaleMax, lifeMin, lifeMax, angleMin, angleMax,
                                   speedMin, speedMax, forces, reboundScaler, colour, envCollisions, fade)
         {
             this.cloudSpeedMin = cloudSpeedMin;
             this.cloudSpeedMax = cloudSpeedMax;
-            cloudCirc = new Circ(img, scale, pos, numParticles, launchTimeMin, launchTimeMax, partImg, scaleMin, scaleMax, lifeMin, lifeMax, angleMin, angleMax,
-                                  speedMin, speedMax, forces, reboundScaler, colour, envCollisions, fade, radius, gd);
 
+            cloudCirc = new Circ(emitterImg, scale, pos, numParticles, launchTimeMin, launchTimeMax, partImg, scaleMin, scaleMax, lifeMin, lifeMax, angleMin, angleMax,
+                                  speedMin, speedMax, forces, reboundScaler, colour, envCollisions, fade, radius, gd, showCirc);
+            cloudSpeed = GetRandInt(cloudSpeedMin, cloudSpeedMax);
         }
 
+        public void ToggleCloudCirc()
+        {
+            cloudCirc.ToggleOnOff();
+            cloudCirc.Activate();
+
+            if (!cloudCirc.GetShowLaunch())
+            {
+                cloudCirc.ToggleLauncherVisibility();
+            }
+        }
+
+        private void TranslateCloud(List<Platform> platforms)
+        {
+            if (pos.X + imgWidth / 2 >= platforms[WALL_RIGHT].GetBoundingBox().X || pos.X - imgWidth / 2 <= platforms[WALL_LEFT].GetBoundingBox().X + platforms[WALL_LEFT].GetBoundingBox().Width)
+            {
+                cloudSpeed *= DIR;
+            }
+            cloudCirc.SetCirclePos(cloudSpeed);
+            pos = cloudCirc.GetPosition();
+            emitterX = pos.X;
+            emitterY = pos.Y;
+        }
         public override void Update(GameTime gameTime, List<Platform> platforms)
         {
+            TranslateCloud(platforms);
             cloudCirc.Update(gameTime, platforms);
         }
 
@@ -45,14 +73,9 @@ namespace ParticleProject
         {
             if (showLauncher)
             {
-                //KEYNOTE: THE RECTANGLE IS CENTRED AT EMITTER POSITION, AND THE TOP LEFT IS LOCATED AT THE EMITTER POSITION MINUS HALF THE WIDTH AND HEIGHT OF THE RECTNAGLE 
                 cloudCirc.Draw(spriteBatch);
-                //for (int i = 0; i < particles.Count; i++)
-                //{
-                //    particles[i].Draw(spriteBatch);
-                //}
 
-                spriteBatch.Draw(img, GetRectangle()/*launchPos*/, Color.White);
+                spriteBatch.Draw(img, GetRectangle(), Color.White);
             }
 
 

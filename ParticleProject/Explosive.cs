@@ -30,7 +30,7 @@ namespace ParticleProject
         private int numLaunched;
         private bool reachedNumParticles = false;
 
-        public Explosive(Texture2D img, Vector2 pos, int numParticles) : base(null, EMIT_SCALE, pos, numParticles, NO_TIME, NO_TIME, img, SCALE_MIN, SCALE_MAX, 
+        public Explosive(Texture2D img, Vector2 pos, int numParticles) : base(null, EMIT_SCALE, pos, numParticles, NO_TIME, NO_TIME, img, SCALE_MIN, SCALE_MAX,
                         LIFE_MIN, LIFE_MAX, ANGLE_MIN, ANGLE_MAX, SPEED_MIN, SPEED_MAX, Game1.gravity, Particle.BOWLING_BALL, Color.White, COLLISION, FADE)
         {
         }
@@ -88,7 +88,7 @@ namespace ParticleProject
                     //running = false;
                 }
             }
-            
+
         }
 
         public override void Draw(SpriteBatch spriteBatch)

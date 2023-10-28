@@ -13,76 +13,80 @@ using GameUtility;
 
 namespace ParticleProject
 {
-    class Circ : Emitter
+    class Line : Emitter
     {
-
-        private int radius;
+        private const float SPEED = 2f;
+        private const int DIR = -1;
         private GraphicsDevice gd;
-        private GameCircle circle;
+        private GameLine line;
+        private Vector2 pos1;
+        private Vector2 pos2;
         private Vector2 launchPos;
-        private Vector2 launchDimensions;
-        private bool showCirc;
-        List<Emitter> waterExplosiveEmitter = new List<Emitter>();
-
-        ///type 3 slashes to document
-        public Circ(Texture2D img, float scale, Vector2 pos, int numParticles, int launchTimeMin, int launchTimeMax, Texture2D partImg,
+        private KeyboardState kb;
+        public Line(Texture2D img, float scale, Vector2 pos, int numParticles, int launchTimeMin, int launchTimeMax, Texture2D partImg,
                         float scaleMin, float scaleMax, int lifeMin, int lifeMax, int angleMin, int angleMax, int speedMin, int speedMax,
-                        Vector2 forces, float reboundScaler, Color colour, bool envCollisions, bool fade, int radius, GraphicsDevice gd, bool showCirc)
+                        Vector2 forces, float reboundScaler, Color colour, bool envCollisions, bool fade, int lineLength, GraphicsDevice gd, int lineWidth)
                     : base(img, scale, pos, numParticles, launchTimeMin, launchTimeMax, partImg, scaleMin, scaleMax, lifeMin, lifeMax, angleMin, angleMax,
                           speedMin, speedMax, forces, reboundScaler, colour, envCollisions, fade)
         {
-            this.radius = radius;
-            this.gd = gd;
-            this.pos.X = pos.X;
-            this.pos.Y = pos.Y;
-            //this.centeredPos.X = (int)pos.X - width / 2;
-            //this.centeredPos.Y = (int)pos.Y - height / 2;
-            circle = new GameCircle(gd, pos, radius);
-            SetLaunchArea(/*(int)pos.X, (int)pos.Y*/);
-            //this.state = INACTIVE;
-            //this.running = false;
-            this.showCirc = showCirc;
+            pos1 = pos;
+            pos2.X = pos.X + lineLength;
+            pos2.Y = pos.Y;
+            line = new GameLine(gd, pos1, pos2, lineWidth);
         }
 
-        public void SetLaunchArea(/*int x, int y*/)
+        private Vector2 GetLaunchPos()
         {
-            int angle = GetRandInt(angleMin, angleMax + INCREMENT);
-            launchDimensions.X = Math.Abs(radius * (float)Math.Cos(angle));
-            launchDimensions.Y = Math.Abs(radius * (float)Math.Sin(angle));
-        }
-        private Vector2 GetLaunchPos(int x, int y)
-        {
-            int xPos = 0;
-            int yPos = 0;
-
-            xPos = GetRandInt(x - (int)launchDimensions.X, x + (int)launchDimensions.X);
-            yPos = GetRandInt(y - (int)launchDimensions.Y, y + (int)launchDimensions.Y);
-
+            int xPos = GetRandInt((int)pos1.X, (int)pos2.X);
+            int yPos = GetRandInt((int)pos1.Y, (int)pos2.Y);
             return new Vector2(xPos, yPos);
         }
 
-        //Set the cloud circle's position
-        public void SetCirclePos(int speed)
-        {
-            pos.X += speed;
-        }
+        //Questionable
+        //public override void SetPos(float x, float y)
+        //{
+        //    emitterX = x;
+        //    emitterY = y;
+        //}
 
-        public Vector2 GetPosition()
+        private void TranslateLine()
         {
-            return new Vector2(pos.X, pos.Y);
+            kb = Keyboard.GetState();
+            //Move the line emitter
+            if (kb.IsKeyDown(Keys.D))
+            {
+                line.Translate(SPEED, 0f);
+                pos1.X += SPEED;
+                pos2.X += SPEED;
+            }
+            else if (kb.IsKeyDown(Keys.A))
+            {
+                line.Translate(SPEED * DIR, 0f);
+                pos1.X -= SPEED;
+                pos2.X -= SPEED;
+            }
+            else if (kb.IsKeyDown(Keys.W))
+            {
+                line.Translate(0f, SPEED * DIR);
+                pos1.Y -= SPEED;
+                pos2.Y -= SPEED;
+            }
+            else if (kb.IsKeyDown(Keys.S))
+            {
+                line.Translate(0f, SPEED);
+                pos1.Y += SPEED;
+                pos2.Y += SPEED;
+            }
         }
-
         protected override void Launch()
         {
             if (!launchTimer.IsActive())
             {
                 particles.Add(CreateParticles());
-                launchPos = GetLaunchPos((int)pos.X, (int)pos.Y);
-
+                launchPos = GetLaunchPos();
                 if (particles.Count > 0)
                 {
                     SetPos(launchPos.X, launchPos.Y);
-                    numLaunched++;
                     particles[particles.Count - 1].Launch(launchPos);
                 }
                 launchTimer.ResetTimer(true, GetRandInt(launchTimeMin, launchTimeMax));
@@ -94,6 +98,8 @@ namespace ParticleProject
             {
                 launchTimer.Update(gameTime.ElapsedGameTime.TotalMilliseconds);
 
+                TranslateLine();
+
                 if (!explode)
                 {
                     Launch();
@@ -103,13 +109,7 @@ namespace ParticleProject
                 {
                     LaunchAll();
                 }
-
-                if (numLaunched > numParticles && numParticles != INFINITE)
-                {
-                    state = DEAD;
-                }
             }
-
 
             for (int i = 0; i < particles.Count; i++)
             {
@@ -123,25 +123,22 @@ namespace ParticleProject
                 }
             }
         }
+
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (showLauncher)
             {
-                if (showCirc)
-                {
-                    circle.Draw(spriteBatch, Color.Red * transparency);
-                }
-
+                //KEYNOTE: THE RECTANGLE IS CENTRED AT EMITTER POSITION, AND THE TOP LEFT IS LOCATED AT THE EMITTER POSITION MINUS HALF THE WIDTH AND HEIGHT OF THE RECTNAGLE 
+                line.Draw(spriteBatch, Color.Black);
 
                 for (int i = 0; i < particles.Count; i++)
                 {
                     particles[i].Draw(spriteBatch);
                 }
 
-                spriteBatch.Draw(img, GetRectangle(), Color.White);
+                //spriteBatch.Draw(img, GetRectangle()/*launchPos*/, Color.White);
             }
 
         }
-
     }
 }

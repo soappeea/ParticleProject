@@ -22,7 +22,7 @@ namespace ParticleProject
         public Platform(Texture2D blockImg, int numBricks, float scale, int x, int y, bool isHorizontal)
         {
             img = blockImg;
-            blockRecs = new Rectangle[Math.Max(1,numBricks)];
+            blockRecs = new Rectangle[Math.Max(1, numBricks)];
 
             int width = (int)(img.Width * scale);
             int height = (int)(img.Height * scale);
@@ -34,7 +34,7 @@ namespace ParticleProject
                                              width, height);
             }
 
-            rec = new Rectangle(x, y, 
+            rec = new Rectangle(x, y,
                                 blockRecs[numBricks - 1].Right - blockRecs[0].Left,   //width = Right side of last block - Left side of first block
                                 blockRecs[numBricks - 1].Bottom - blockRecs[0].Top);  //height = Bottom side of last block - Top side of first block
         }
