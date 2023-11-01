@@ -1,11 +1,9 @@
 ﻿//Author: Sophia Lin
 //File Name: Game1.cs
 //Project Name: Particle Project
-//Creation Date: 
-//Modified Date: 
-//Description: 
-//TODO:
-//cloud
+//Creation Date: October 18, 2023
+//Modified Date: October 30, 2023
+//Description: Run whole game 
 using System;
 using System.IO;
 using System.Linq;
@@ -29,7 +27,7 @@ namespace ParticleProject
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
 
-        //public RNG to be used by all classes. e.g. Game1.rng.Next(1,11)
+        //Public RNG to be used by all classes. 
         public static Random rng = new Random();
 
         //Spritefonts for various forms of output
@@ -42,6 +40,7 @@ namespace ParticleProject
         //Store the emitter image
         private Texture2D emitterImg;
         private Texture2D cloudImg;
+        private Texture2D heartImg;
 
         //Store the particle images
         private Texture2D[] smokeImgs = new Texture2D[2];
@@ -71,7 +70,7 @@ namespace ParticleProject
         //Store the game's paused state
         private bool paused = false;
 
-        //forces Vectors, they can be directly added to combine them if needed
+        //forces Vectors
         public static Vector2 gravity = new Vector2(0, 9.8f);
         public static Vector2 wind = new Vector2(2f, 0);
         public static Vector2 lift = new Vector2(0.5f, -1.5f);
@@ -79,17 +78,17 @@ namespace ParticleProject
         //Store the platforms
         private List<Platform> platforms = new List<Platform>();
 
-        //Define List of all Emitters here (Thank you polymorphism!)
+        //Store list of all kinds of Emitters 
         private List<Emitter> emitters = new List<Emitter>();
         private List<Emitter> explosiveEmitters = new List<Emitter>();
         private List<Cloud> cloudEmitters = new List<Cloud>();
         private Emitter lineEmitter;
 
-        //private const int NORMAL_EMIT_START = 0;
-        //Track index at where last normal emitter is and where mouse emitter is
+        //Track index of the separation indicator of which the emitters differ
         private const int NORMAL_EMIT_END = 4;
         private const int MOUSE_EMITTER = 7;
         private const int SPECIAL_EMIT_BEGIN = 5;
+
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
@@ -143,68 +142,73 @@ namespace ParticleProject
             brickImg = Content.Load<Texture2D>("Images/Sprites/Brick");
             cloudImg = Content.Load<Texture2D>("Images/Sprites/Cloud");
             raindropImg = Content.Load<Texture2D>("Images/Sprites/Raindrop");
+            heartImg = Content.Load<Texture2D>("Images/Sprites/Heart");
 
             //Store the background rectangle
             bgRec = new Rectangle(0, 0, screenWidth, screenHeight);
 
             //Setup platforms for walls and floating platforms
             float brickScale = 0.25f;
-            platforms.Add(new Platform(brickImg, 26, brickScale, 0, 0, false));                                                 //left wall
-            platforms.Add(new Platform(brickImg, 26, brickScale, screenWidth - (int)(brickImg.Width * brickScale), 0, false));  //right wall
-            platforms.Add(new Platform(brickImg, 10, 1f, 0, screenHeight - brickImg.Height, true));                             //floor
+            //left wall
+            platforms.Add(new Platform(brickImg, 26, brickScale, 0, 0, false));
+            //right wall
+            platforms.Add(new Platform(brickImg, 26, brickScale, screenWidth - (int)(brickImg.Width * brickScale), 0, false));
+            //floor
+            platforms.Add(new Platform(brickImg, 10, 1f, 0, screenHeight - brickImg.Height, true));
 
-            platforms.Add(new Platform(brickImg, 4, 0.5f, 150, 500, true));                                                     //left platform
+            //left platform
+            platforms.Add(new Platform(brickImg, 4, 0.5f, 150, 500, true));
             platforms.Add(new Platform(brickImg, 2, 0.5f, 200, 400, false));
 
-            platforms.Add(new Platform(brickImg, 1, 0.5f, 700, 590, false));                                                    //Hill
+            //Hill
+            platforms.Add(new Platform(brickImg, 1, 0.5f, 700, 590, false));
             platforms.Add(new Platform(brickImg, 2, 0.5f, 750, 540, false));
             platforms.Add(new Platform(brickImg, 3, 0.5f, 800, 490, false));
             platforms.Add(new Platform(brickImg, 2, 0.5f, 850, 540, false));
             platforms.Add(new Platform(brickImg, 1, 0.5f, 900, 590, false));
 
-            platforms.Add(new Platform(brickImg, 10, 0.25f, 25, 108, true));                                                    //Water platform
+            //Water platform
+            platforms.Add(new Platform(brickImg, 10, 0.25f, 25, 108, true));
 
-            //TODO: Add permanent emitters here
-
+            //Add permanent emitters
             //Water Emitter
             float emitterScaleWater = 0.25f;
-            emitters.Add(new Emitter(emitterImg, emitterScaleWater, new Vector2(38, 96), Emitter.INFINITE, 0, 10, bluePartImg, 0.1f,             //top left
-                 0.25f, 3000, 4000, 330, 390, 250, 500, gravity, Particle.SPLAT_BALL, Color.White, true, true));
-            emitters.Add(new Emitter(emitterImg, emitterScaleWater, new Vector2(screenWidth / 2, 12), Emitter.INFINITE, 0, 10, bluePartImg, 0.1f,          //top
-                   0.25f, 3000, 4000, 240, 300, 250, 500, gravity, Particle.SPLAT_BALL, Color.White, true, true));
-            emitters.Add(new Emitter(emitterImg, emitterScaleWater, new Vector2(963, 100), Emitter.INFINITE, 0, 10, bluePartImg, 0.1f,          //right
-                   0.25f, 3000, 4000, 150, 210, 250, 500, gravity, Particle.SPLAT_BALL, Color.White, true, true));
-            emitters.Add(new Emitter(emitterImg, emitterScaleWater, new Vector2(825, 480), Emitter.INFINITE, 0, 10, bluePartImg, 0.1f,          //On hill
-                   0.25f, 3000, 4000, 60, 120, 250, 500, gravity, Particle.SPLAT_BALL, Color.White, true, true));
+            //top left
+            emitters.Add(new Emitter(emitterImg, emitterScaleWater, new Vector2(38, 96), Emitter.INFINITE, 0, 10, bluePartImg, 0.1f,
+                                    0.25f, 3000, 4000, 330, 390, 250, 500, gravity, Particle.SPLAT_BALL, Color.White, true, true));
+            //top
+            emitters.Add(new Emitter(emitterImg, emitterScaleWater, new Vector2(screenWidth / 2, 12), Emitter.INFINITE, 0, 10, bluePartImg, 0.1f,
+                                    0.25f, 3000, 4000, 240, 300, 250, 500, gravity, Particle.SPLAT_BALL, Color.White, true, true));
+            //right
+            emitters.Add(new Emitter(emitterImg, emitterScaleWater, new Vector2(963, 100), Emitter.INFINITE, 0, 10, bluePartImg, 0.1f,
+                                    0.25f, 3000, 4000, 150, 210, 250, 500, gravity, Particle.SPLAT_BALL, Color.White, true, true));
+            //On hill
+            emitters.Add(new Emitter(emitterImg, emitterScaleWater, new Vector2(825, 480), Emitter.INFINITE, 0, 10, bluePartImg, 0.1f,
+                                    0.25f, 3000, 4000, 60, 120, 250, 500, gravity, Particle.SPLAT_BALL, Color.White, true, true));
 
             //Smoke Emitter
             float emitterScaleSmoke = 0.25f;
             emitters.Add(new Emitter(emitterImg, emitterScaleSmoke, new Vector2(225, 388), Emitter.INFINITE, 0, 100, smokeImgs[0], 0.3f,
-                   0.5f, 2500, 3500, 75, 105, 100, 100, lift, Particle.SPLAT_BALL, Color.White, true, true));
+                                    0.5f, 2500, 3500, 75, 105, 100, 100, lift, Particle.SPLAT_BALL, Color.White, true, true));
+
 
             //Rectangle Emitter
-            emitters.Add(new Rect(emitterImg, emitterScaleWater, new Vector2(platforms[0].GetBoundingBox().Width + 38, 400 + 100) /*since rectnalge is centred at emitter position*/,
-                /*lalalaalalalal*/50, /*temp*/2000, /*temp*/4000, blankPartImg, /*temp*/0.2f, /*temp*/0.3f,  /*temp*/2000,  /*temp*/3000,  /*temp*/90,  /*temp*/270,
-                /*temp*/200,  /*temp*/400, gravity,/*temp*/Particle.SPLAT_BALL, Color.Yellow, true, true, /*temp*/75,/*temp*/ 200, GraphicsDevice));
+            float emitterScaleSpecial = 0.05f;
+            emitters.Add(new Rect(heartImg, emitterScaleSpecial, new Vector2(platforms[0].GetBoundingBox().Width + 38, 500), 50, 2000, 4000,
+                                  blankPartImg, 0.2f, 0.3f, 2000, 3000, 90, 270, 200, 400, gravity, Particle.SPLAT_BALL, Color.Yellow, true, true, 75, 200, GraphicsDevice));
 
             //Circle Emitter
-            emitters.Add(new Circ(emitterImg, emitterScaleWater, /*temporary loc*/new Vector2(500, 400), 75, /*temp*/500, /*temp*/700, blankPartImg,
-                /*temp*/0.2f, /*temp*/0.3f,  /*temp*/2000,  /*temp*/3000,  /*temp*/0,  /*temp*/360,  /*temp*/200,  /*temp*/400, gravity,
-                /*temp*/Particle.SPLAT_BALL, Color.HotPink, true, true, /*temp*/70, GraphicsDevice, true));
+            emitters.Add(new Circ(heartImg, emitterScaleSpecial, new Vector2(500, 400), 75, 500, 700, blankPartImg, 0.2f, 0.3f, 2000, 3000,
+                                  0, 360, 200, 400, gravity, Particle.SPLAT_BALL, Color.HotPink, true, true, 70, GraphicsDevice, true));
 
-            //Line emitter //CHANGE MOUSE EMITTER TO 8 IF UNCOMMENTING
-            //emitters.Add(new Line(emitterImg, emitterScaleWater, /*temporary loc*/new Vector2(400, 400), Emitter.INFINITE, /*temp*/1, /*temp*/100, blankPartImg,
-            //   /*temp*/0.2f, /*temp*/0.3f,  /*temp*/2000,  /*temp*/3000,  /*temp*/0,  /*temp*/360,  /*temp*/200,  /*temp*/400, gravity,
-            //   /*temp*/Particle.RUBBER_BALL, Color.Red, true, true, /*temp*/30, GraphicsDevice));
+            //Line emitter 
+            lineEmitter = new Line(emitterImg, emitterScaleSpecial, new Vector2(200, 200), Emitter.INFINITE, 1, 100, blankPartImg,
+                                   0.05f, 0.1f, 2000, 3000, 90, 100, 200, 400, gravity, Particle.RUBBER_BALL, Color.Red, true, true, 100, GraphicsDevice, 3);
 
-            lineEmitter = new Line(emitterImg, emitterScaleWater, /*temporary loc*/new Vector2(200, 200), Emitter.INFINITE, /*temp*/1, /*temp*/100, blankPartImg,
-               /*temp*/0.05f, /*temp*/0.1f,  /*temp*/2000,  /*temp*/3000,  /*temp*/90,  /*temp*/100,  /*temp*/200,  /*temp*/400, gravity,
-               /*temp*/Particle.RUBBER_BALL, Color.Red, true, true, /*temp*/100, GraphicsDevice, 3);
-
-            //Mouse Emitter (set as last emitter)
+            //Mouse Emitter 
             float emitterScaleMouse = 0f;
-            emitters.Add(new Emitter(null, emitterScaleMouse, new Vector2(0, 0), Emitter.INFINITE, 50, 100, blankPartImg, 0.1f,
-                 0.2f, 1000, 2000, 0, 360, 0, 100, gravity, Particle.BOWLING_BALL, Color.Green, false, true));
+            emitters.Add(new Emitter(null, emitterScaleMouse, new Vector2(0, 0), Emitter.INFINITE, 50, 100, blankPartImg, 0.1f, 0.2f, 1000, 2000,
+                            0, 360, 0, 100, gravity, Particle.BOWLING_BALL, Color.Green, false, true));
 
             //Cloud Emitter
             float emitterScaleCloud = 0.05f;
@@ -265,10 +269,10 @@ namespace ParticleProject
                     //No mouse collision with platforms was found, explosion is allowed
                     if (noCollision)
                     {
-                        //TODO: Add an explosion of particles here to List of explosive emitters
-                        //ASK ABOUT CLAMP NUMBER OF PARTICLES, needs to be enforced at a number between 1 and max particles\
-
+                        //Store number of particles to be in explosion
                         int numParticles = MathHelper.Clamp(1000, 1, Emitter.MAX_PARTICLES);
+
+                        //Add an explosion of particles to list of explosive emitters
                         explosiveEmitters.Add(new Explosive(starImg, new Vector2(mouse.X, mouse.Y), numParticles));
                     }
                 }
@@ -277,53 +281,64 @@ namespace ParticleProject
                 //Left spout
                 if (kb.IsKeyDown(Keys.D1) && !prevKb.IsKeyDown(Keys.D1))
                 {
+                    //Turn on/off left water spout and change state to active
                     emitters[0].ToggleOnOff();
                     emitters[0].Activate();
                 }
-                if (kb.IsKeyDown(Keys.D2) && !prevKb.IsKeyDown(Keys.D2))    //Top spout
+                //Top spout
+                if (kb.IsKeyDown(Keys.D2) && !prevKb.IsKeyDown(Keys.D2))
                 {
+                    //Turn on/off top water spout and change state to active
                     emitters[1].ToggleOnOff();
                     emitters[1].Activate();
                 }
-                if (kb.IsKeyDown(Keys.D3) && !prevKb.IsKeyDown(Keys.D3))    //Right
+                //Right
+                if (kb.IsKeyDown(Keys.D3) && !prevKb.IsKeyDown(Keys.D3))
                 {
+                    //Turn on/off right water spout and change state to active
                     emitters[2].ToggleOnOff();
                     emitters[2].Activate();
                 }
-                if (kb.IsKeyDown(Keys.D4) && !prevKb.IsKeyDown(Keys.D4))    //Bottom 
+                //Bottom 
+                if (kb.IsKeyDown(Keys.D4) && !prevKb.IsKeyDown(Keys.D4))
                 {
+                    //Turn on/off bottom water spout and change state to active
                     emitters[3].ToggleOnOff();
                     emitters[3].Activate();
                 }
-
-                //Toggle Smoker
-                if (kb.IsKeyDown(Keys.D5) && !prevKb.IsKeyDown(Keys.D5))    //Smoke emitter
+                //Toggle smoke emitter
+                if (kb.IsKeyDown(Keys.D5) && !prevKb.IsKeyDown(Keys.D5))
                 {
+                    //Turn on/off smoke emitter and change state to active
                     emitters[4].ToggleOnOff();
                     emitters[4].Activate();
                 }
 
+                //Toggle special/level 4 emitters if they are shown on screen
                 for (int i = 5; i < 6; i++)
                 {
                     if (emitters[i].GetShowLaunch() == true)
                     {
-                        //Toggle the Circular, Rectangular and Line Emitters
-                        if (kb.IsKeyDown(Keys.D6) && !prevKb.IsKeyDown(Keys.D6))    //Rectangular Launcher
+                        //Toggle rectangular launcher
+                        if (kb.IsKeyDown(Keys.D6) && !prevKb.IsKeyDown(Keys.D6))
                         {
-                            //TODO: Turn on/off bottom wall spout
+                            //Turn on/off rectangular emitter and change state to active
                             emitters[5].ToggleOnOff();
                             emitters[5].Activate();
                         }
-                        if (kb.IsKeyDown(Keys.D7) && !prevKb.IsKeyDown(Keys.D7))    //Circular Launcher
+
+                        //Toggle circular launcher
+                        if (kb.IsKeyDown(Keys.D7) && !prevKb.IsKeyDown(Keys.D7))
                         {
-                            //TODO: Turn on/off bottom wall spout
+                            //Turn on/off circular emitter and change state to active
                             emitters[6].ToggleOnOff();
                             emitters[6].Activate();
-
                         }
-                        if (kb.IsKeyDown(Keys.D8) && !prevKb.IsKeyDown(Keys.D8))    //Cloud Launcher
+
+                        //Toggle cloud launchers
+                        if (kb.IsKeyDown(Keys.D8) && !prevKb.IsKeyDown(Keys.D8))
                         {
-                            //TODO: Turn on/off bottom wall spout
+                            //Turn on/off cloud emitters and change state to active
                             cloudEmitters[0].ToggleOnOff();
                             cloudEmitters[0].Activate();
                             cloudEmitters[0].ToggleCloudCirc();
@@ -331,41 +346,40 @@ namespace ParticleProject
                             cloudEmitters[1].Activate();
                             cloudEmitters[1].ToggleCloudCirc();
                         }
-                        if (kb.IsKeyDown(Keys.D9) && !prevKb.IsKeyDown(Keys.D9))    //Line Launcher
+
+                        //Toggle line launcher
+                        if (kb.IsKeyDown(Keys.D9) && !prevKb.IsKeyDown(Keys.D9))
                         {
-                            //TODO: Turn on/off bottom wall spout
-                            //emitters[7].ToggleOnOff();
-                            //emitters[7].Activate();
+                            //Turn on/off line emitter and change state to active
                             lineEmitter.ToggleOnOff();
                             lineEmitter.Activate();
                         }
                     }
                 }
 
-                if (kb.IsKeyDown(Keys.Space) && !prevKb.IsKeyDown(Keys.Space))    //Show Launch indicators
+                //Toggle showing the special/level 4 emitters
+                if (kb.IsKeyDown(Keys.Space) && !prevKb.IsKeyDown(Keys.Space))
                 {
                     for (int i = 5; i < emitters.Count; i++)
                     {
                         emitters[i].ToggleLauncherVisibility();
                     }
-                    //emitters[5].ToggleLauncherVisibility();
-                    //emitters[6].ToggleLauncherVisibility();
+
                     for (int i = 0; i < cloudEmitters.Count; i++)
                     {
                         cloudEmitters[i].ToggleLauncherVisibility();
                     }
 
-                    //emitters[7].ToggleLauncherVisibility();
                     lineEmitter.ToggleLauncherVisibility();
                 }
 
                 //Update mouse Emitter's location
                 emitters[emitters.Count - 1].SetPos(mouse.X, mouse.Y);
 
-                //TODO: Update all emitters, removing them when completed
-                //Normal emitters
+                //Update normal emitters
                 for (int i = 0; i < emitters.Count; i++)
                 {
+                    //Update if the emitter is running
                     if (emitters[i].GetRunState() == true)
                     {
                         if (i <= NORMAL_EMIT_END || i == MOUSE_EMITTER)
@@ -374,30 +388,40 @@ namespace ParticleProject
                         }
                     }
 
-                    if (emitters[i].GetState() == Emitter.DEAD)
+                    //Remove the emitter when its state is done
+                    if (emitters[i].GetState() == Emitter.DONE)
                     {
                         emitters.RemoveAt(i);
                     }
-
                 }
 
-                //Level 4 emitters
-                //Temporarily get rid of for debugging purposes
+                //Update special emitters
                 for (int i = SPECIAL_EMIT_BEGIN; i < MOUSE_EMITTER; i++)
                 {
+                    //Update if the emitter is running
                     if (emitters[i].GetRunState() == true)
                     {
+                        //Update if emitter is shown on the screen
                         if (emitters[i].GetShowLaunch() == true)
                         {
                             emitters[i].Update(gameTime, platforms);
                         }
                     }
+
+                    //Remove the emitter when its state is done
+                    if (emitters[i].GetState() == Emitter.DONE)
+                    {
+                        emitters.RemoveAt(i);
+                    }
                 }
 
+                //Update cloud emitters
                 for (int i = 0; i < cloudEmitters.Count; i++)
                 {
+                    //Update if the emitter is running
                     if (cloudEmitters[i].GetRunState() == true)
                     {
+                        //Update if emitter is shown on the screen
                         if (cloudEmitters[i].GetShowLaunch() == true)
                         {
                             cloudEmitters[i].Update(gameTime, platforms);
@@ -405,21 +429,26 @@ namespace ParticleProject
                     }
                 }
 
+                //Update explosive emitters
                 for (int i = 0; i < explosiveEmitters.Count; i++)
                 {
+                    //Update if the emitter is running
                     if (explosiveEmitters[i].GetRunState() == true)
                     {
                         explosiveEmitters[i].Update(gameTime, platforms);
                     }
 
-                    if (explosiveEmitters[i].GetState() == Emitter.DEAD)
+                    //Remove the emitter when its state is done
+                    if (explosiveEmitters[i].GetState() == Emitter.DONE)
                     {
                         explosiveEmitters.RemoveAt(i);
                     }
                 }
 
+                //Update line emitter if it is running
                 if (lineEmitter.GetRunState() == true)
                 {
+                    //Update if emitter is shown on the screen
                     if (lineEmitter.GetShowLaunch() == true)
                     {
                         lineEmitter.Update(gameTime, platforms);
@@ -467,6 +496,7 @@ namespace ParticleProject
                 cloudEmitters[i].Draw(spriteBatch);
             }
 
+            //Display line emitter
             lineEmitter.Draw(spriteBatch);
 
             spriteBatch.End();
